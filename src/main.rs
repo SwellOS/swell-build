@@ -16,7 +16,7 @@ const SOURCE_DIR: &str = "/usr/src/swell/sources";
 const DESTDIR_BASE: &str = "/usr/src/swell/dest";
 
 const CATEGORIES: &[&str] = &[
-    "core", "desktop", "browser", "dev", "gaming", "multimedia", "office", "network",
+    "core", "desktop", "browser", "dev", "gaming", "multimedia", "office", "network", "community",
 ];
 
 #[derive(Parser)]
@@ -350,7 +350,7 @@ fi
 
 # Enter the first subdirectory (unpacked source)
 cd "{src}"
-for d in "$SRCDIR"*/; do
+for d in "$SRCDIR"/*/; do
     if [ -d "$d" ]; then
         cd "$d"
         break
