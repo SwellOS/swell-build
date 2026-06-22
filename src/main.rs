@@ -1,3 +1,5 @@
+mod iso;
+
 use clap::Parser;
 use std::collections::{HashMap, HashSet};
 use std::fs;
@@ -45,6 +47,27 @@ enum Commands {
     Info {
         name: String,
     },
+    /// Build a bootable live ISO
+    Iso {
+        /// Path to kernel bzImage
+        #[arg(long, short = 'K')]
+        kernel: Option<String>,
+        /// Path to rootfs directory (builds from .swell packages if omitted)
+        #[arg(long, short = 'R')]
+        root: Option<String>,
+        /// Output ISO path
+        #[arg(long, short = 'o')]
+        output: Option<String>,
+        /// ISO volume label
+        #[arg(long)]
+        label: Option<String>,
+        /// OS version string
+        #[arg(long, short = 'V')]
+        version: Option<String>,
+        /// Overwrite existing ISO and staging
+        #[arg(long, short = 'f')]
+        force: bool,
+    },
 }
 
 fn main() {
@@ -77,6 +100,27 @@ fn main() {
         }
         Commands::Info { name } => {
             if let Err(e) = info_package(name) {
+                eprintln!("{}", e);
+                std::process::exit(1);
+            }
+        }
+        Commands::Iso {
+            kernel,
+            root,
+            output,
+            label,
+            version,
+            force,
+        } => {
+            let opts = iso::IsoOptions {
+                kernel: kernel.clone(),
+                root: root.clone(),
+                output: output.clone(),
+                label: label.clone(),
+                version: version.clone(),
+                force: *force,
+            };
+            if let Err(e) = iso::build_iso(opts) {
                 eprintln!("{}", e);
                 std::process::exit(1);
             }
@@ -671,6 +715,7 @@ fn clean_all() {
     let dirs = [
         PathBuf::from(BUILD_DIR),
         PathBuf::from(DESTDIR_BASE),
+        PathBuf::from(iso::ISO_WORK_DIR),
     ];
     for d in &dirs {
         if d.exists() {
