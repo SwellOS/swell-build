@@ -301,7 +301,7 @@ fn build_package(name: &str, show_progress: bool) -> Result<(), String> {
                 println!("    \x1b[36mfetching\x1b[0m {}", url);
             }
             let status = Command::new("curl")
-                .args(["-L", "-o", &dest.to_string_lossy(), url])
+                .args(["-L", "--retry", "3", "--retry-delay", "5", "-o", &dest.to_string_lossy(), url])
                 .status()
                 .map_err(|e| format!("curl failed: {}", e))?;
             if !status.success() {
