@@ -19,7 +19,12 @@ mount -t devtmpfs none /dev 2>/dev/null
 echo "SwellOS: mounting live media..."
 mkdir -p /run/live
 
-label="${SWELL_LABEL:-SWELLOS_0_1}"
+label="SWELLOS_0_1"
+for arg in $(cat /proc/cmdline); do
+  case "$arg" in
+    root=live:LABEL=*) label="${arg#root=live:LABEL=}" ;;
+  esac
+done
 
 for dev in /dev/disk/by-label/"$label" /dev/sr0 /dev/sr1; do
     if [ -e "$dev" ]; then
@@ -73,12 +78,12 @@ const GRUB_CFG: &str = r#"set default=0
 set timeout=5
 
 menuentry "SwellOS" {
-    linux /boot/vmlinuz root=live:LABEL=SWELL_LABEL quiet
+    linux /boot/vmlinuz root=live:LABEL=SWELL_LABEL earlycon console=ttyS0,115200n8 quiet
     initrd /boot/initramfs.gz
 }
 
 menuentry "SwellOS (verbose)" {
-    linux /boot/vmlinuz root=live:LABEL=SWELL_LABEL
+    linux /boot/vmlinuz root=live:LABEL=SWELL_LABEL earlycon console=ttyS0,115200n8
     initrd /boot/initramfs.gz
 }
 "#;
