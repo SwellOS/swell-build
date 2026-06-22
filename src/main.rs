@@ -154,11 +154,16 @@ struct PackageDef {
 }
 
 fn load_package_def(name: &str) -> Result<PackageDef, String> {
-    for cat in CATEGORIES {
-        let candidate = Path::new(PACKAGES_REPO).join(cat).join(name);
+    let (categories, pkg_name): (&[&str], &str) = if let Some(slash) = name.find('/') {
+        (&[&name[..slash]], &name[slash + 1..])
+    } else {
+        (&CATEGORIES, name)
+    };
+    for cat in categories {
+        let candidate = Path::new(PACKAGES_REPO).join(cat).join(pkg_name);
         if candidate.is_dir() {
             let version = fs::read_to_string(candidate.join("version"))
-                .map_err(|_| format!("no version file for {}", name))?
+                .map_err(|_| format!("no version file for {}", pkg_name))?
                 .trim()
                 .to_string();
 
@@ -185,7 +190,7 @@ fn load_package_def(name: &str) -> Result<PackageDef, String> {
             };
 
             return Ok(PackageDef {
-                name: name.to_string(),
+                name: pkg_name.to_string(),
                 category: cat.to_string(),
                 path: candidate,
                 version,
