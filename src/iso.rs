@@ -451,16 +451,7 @@ fn assemble_iso(staging_dir: &Path, output: &Path, label: &str) -> Result<(), St
             &output.to_string_lossy(),
             &staging_dir.to_string_lossy(),
             "--",
-            "-volid",
-            label,
-            "-volset",
-            label,
-            "-appid",
-            "SwellOS",
-            "-publisher",
-            "SwellOS",
-            "-sysid",
-            "x86_64",
+            "-volid", label,
         ])
         .status()
         .map_err(|e| format!("grub-mkrescue: {}", e))?;
