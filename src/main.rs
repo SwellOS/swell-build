@@ -151,6 +151,9 @@ struct PackageDef {
     version: String,
     depends: Vec<String>,
     sources: Vec<String>,
+    description: String,
+    maintainer: String,
+    url: String,
 }
 
 fn load_package_def(name: &str) -> Result<PackageDef, String> {
@@ -189,6 +192,16 @@ fn load_package_def(name: &str) -> Result<PackageDef, String> {
                 Vec::new()
             };
 
+            let description = fs::read_to_string(candidate.join("description"))
+                .map(|s| s.trim().to_string())
+                .unwrap_or_default();
+            let maintainer = fs::read_to_string(candidate.join("maintainer"))
+                .map(|s| s.trim().to_string())
+                .unwrap_or_else(|_| "SwellOS Team".to_string());
+            let url = fs::read_to_string(candidate.join("url"))
+                .map(|s| s.trim().to_string())
+                .unwrap_or_else(|_| "https://swellos.org".to_string());
+
             return Ok(PackageDef {
                 name: pkg_name.to_string(),
                 category: cat.to_string(),
@@ -196,6 +209,9 @@ fn load_package_def(name: &str) -> Result<PackageDef, String> {
                 version,
                 depends,
                 sources,
+                description,
+                maintainer,
+                url,
             });
         }
     }
@@ -411,13 +427,28 @@ fi
                 .join(", "))
     };
 
+    let description = if pkg.description.is_empty() {
+        String::new()
+    } else {
+        format!("\ndescription = \"{}\"\n", pkg.description)
+    };
+    let maintainer = if pkg.maintainer.is_empty() {
+        String::new()
+    } else {
+        format!("maintainer = \"{}\"\n", pkg.maintainer)
+    };
+    let url = if pkg.url.is_empty() {
+        String::new()
+    } else {
+        format!("url = \"{}\"\n", pkg.url)
+    };
+
     let metadata = format!(
         r#"name = "{}"
 version = "{}"
 release = 1
-arch = "x86_64"
-{}"#,
-        pkg.name, pkg.version, depends_str
+arch = "x86_64"{}{}{}{}"#,
+        pkg.name, pkg.version, description, maintainer, url, depends_str
     );
     fs::write(dest_dir.join("metadata.toml"), &metadata)
         .map_err(|e| format!("metadata: {}", e))?;
