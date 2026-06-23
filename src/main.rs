@@ -67,6 +67,9 @@ enum Commands {
         /// Overwrite existing ISO and staging
         #[arg(long, short = 'f')]
         force: bool,
+        /// Path to GRUB background image (PNG)
+        #[arg(long)]
+        grub_bg: Option<String>,
     },
 }
 
@@ -111,6 +114,7 @@ fn main() {
             label,
             version,
             force,
+            grub_bg,
         } => {
             let opts = iso::IsoOptions {
                 kernel: kernel.clone(),
@@ -119,6 +123,7 @@ fn main() {
                 label: label.clone(),
                 version: version.clone(),
                 force: *force,
+                grub_bg: grub_bg.clone(),
             };
             if let Err(e) = iso::build_iso(opts) {
                 eprintln!("{}", e);

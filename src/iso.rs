@@ -95,6 +95,7 @@ pub struct IsoOptions {
     pub label: Option<String>,
     pub version: Option<String>,
     pub force: bool,
+    pub grub_bg: Option<String>,
 }
 
 pub fn build_iso(opts: IsoOptions) -> Result<(), String> {
@@ -191,6 +192,24 @@ pub fn build_iso(opts: IsoOptions) -> Result<(), String> {
     let grubcfg = GRUB_CFG.replace("SWELL_LABEL", label);
     fs::write(grub_dir.join("grub.cfg"), &grubcfg)
         .map_err(|e| format!("grub.cfg: {}", e))?;
+
+    // 5b. Copy GRUB background
+    if let Some(bg_path) = &opts.grub_bg {
+        let bg = PathBuf::from(bg_path);
+        if bg.is_file() {
+            println!("  \x1b[36mgrub-bg\x1b[0m {}", bg.display());
+            fs::copy(&bg, grub_dir.join("background.png"))
+                .map_err(|e| format!("copy grub bg: {}", e))?;
+            // Re-read and update grub.cfg with background directive
+            let mut cfg = fs::read_to_string(grub_dir.join("grub.cfg"))
+                .map_err(|e| format!("read grub.cfg: {}", e))?;
+            cfg.insert_str(0, "set grub_background=\"/boot/grub/background.png\"\n");
+            fs::write(grub_dir.join("grub.cfg"), &cfg)
+                .map_err(|e| format!("write grub.cfg: {}", e))?;
+        } else {
+            eprintln!("  \x1b[33mwarning\x1b[0m GRUB background not found: {}", bg.display());
+        }
+    }
 
     // 6. Assemble ISO
     println!("  \x1b[36miso\x1b[0m     {}...", output_path.display());
